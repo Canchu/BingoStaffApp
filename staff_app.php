@@ -4,20 +4,20 @@
  
     //connect DB and catch bingo data to all_bingo_data[]
       function connectDB(){
-        $dsn = 'mysql:dbname=test_bingo;host=localhost;port=3306';
+        $dsn = 'mysql:dbname=bingonowdata;host=localhost;port=3306';
         $user = 'root';
         $password = '';
       try{ 
         $dbh = new PDO($dsn, $user, $password);
   
-        $sql = "select * from bingonowdata where id =";
+        $sql = "select * from bingodata where id =";
         $row = "";
 
         $all_bingo_data = [];
 
         for($i=1; $i<=4; $i++){
           foreach ($dbh->query($sql.$i) as $row);
-          $all_bingo_data[$i-1] = $row['nums'].",$i";
+          $all_bingo_data[$i-1] = $row['num'].",$i";
           $row = "";
         }
         
@@ -79,7 +79,7 @@
   }
 
   function renewDB($id,$nums){
-      $dsn = 'mysql:dbname=test_bingo;host=localhost;port=3306';
+      $dsn = 'mysql:dbname=bingonowdata;host=localhost;port=3306';
       $user = 'root';
       $password = '';
       $stringnums = "";
@@ -99,7 +99,7 @@
 
       try{ 
         $dbh = new PDO($dsn, $user, $password);
-        $sql = "UPDATE bingonowdata SET nums = '$stringnums' WHERE id = '$id' ";
+        $sql = "UPDATE bingodata SET num = '$stringnums' WHERE id = '$id' ";
         $dbh->query($sql);
 
       }catch (PDOException $e){
@@ -136,12 +136,17 @@
       CheckBingo($Card);
   }
 
+
       /*bingo check*/
   function CheckBingo($Card){
         $Yokocount =0;
         $Tatecount =0;
         $Nanamecount1 =0;
         $Nanamecount2 =0;
+        global $bingoIds;
+        global $reachIds;
+        $bingoIds = [];
+        $reachIds = [];
         foreach( $Card as $key => $value){
           $nanamepreach = 0;
           $pbingo = 0;
@@ -243,16 +248,23 @@
         
         /*present bingo status*/
         if($pbingo){
+          array_push($bingoIds,$key);
           echo "No".$key."が".$pbingo."つビンゴ<br>";
         }
         if($preach > 0){
+          array_push($reachIds,$key);
          echo "No".$key."が".$preach."つリーチ<br>";
         }
-
       }
-      
+
   }
 
+  global $bingoIds;
+  global $reachIds;
+  $json_bingoIds = json_encode($bingoIds);
+  $json_reachIds = json_encode($reachIds);
+  //print_r($bingoIds);
+  //print_r($reachIds);
 
   function CheckCard($Card){
         foreach( $Card as $key => $value ){
@@ -272,11 +284,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Staff Moniter</title>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type ="text/javascript">
+    var bingoIds = JSON.parse('<?php echo $json_bingoIds; ?>');
+    var reachIds = JSON.parse('<?php echo $json_reachIds; ?>');
+    console.log(bingoIds);//show bingo card ids array
+    console.log(reachIds);//show reach card ids array
+    </script>
   </head>
   <body>
     <form action="staff_app.php" method="post">
           <p>値：<input type="number" name="callnum"></p>
-          <input type="submit" value="Bingo">
+          <input type="submit" value="Bingo" onClick="BingoClick()">
     </form>
   </body>
 </html>
